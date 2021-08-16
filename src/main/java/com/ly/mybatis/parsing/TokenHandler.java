@@ -13,7 +13,7 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package com.ly.mybatis.utils;
+package com.ly.mybatis.parsing;
 
 /**
  * @author Clinton Begin

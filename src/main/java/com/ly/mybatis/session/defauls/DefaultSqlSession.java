@@ -1,28 +1,30 @@
-package com.ly.mybatis.builder;
+package com.ly.mybatis.session.defauls;
 
-import com.ly.mybatis.config.Configuration;
+import com.ly.mybatis.executor.Executor;
+import com.ly.mybatis.session.SqlSession;
+import com.ly.mybatis.session.Configuration;
 import com.ly.mybatis.executor.SimpleExecutor;
-import com.ly.mybatis.mapped.MappedStatement;
+import com.ly.mybatis.mapping.MappedStatement;
 
 import java.lang.reflect.Proxy;
-import java.sql.SQLException;
 import java.util.List;
 import java.lang.reflect.*;
 
-
+/**
+ * 默认的SqlSession实现类，在源码中，另外一个SqlSessionManager已经废弃，可不必理会
+ */
 public class DefaultSqlSession implements SqlSession {
 
-    private Configuration configuration;
+    private final Configuration configuration;
+    private final Executor executor;
 
-    public DefaultSqlSession(Configuration configuration) {
+    public DefaultSqlSession(Configuration configuration, Executor executor) {
         this.configuration = configuration;
+        this.executor = executor;
     }
 
     @Override
     public <E> List<E> selectList(String statementid, Object... params) throws Exception {
-
-        // 将要去完成对simpleExecutor里的query方法的调用
-        SimpleExecutor simpleExecutor = new SimpleExecutor();
 
         /*
          * 在mappedStatement里拿到该sql，因为有传入进来的statementid，
@@ -30,7 +32,7 @@ public class DefaultSqlSession implements SqlSession {
          */
         MappedStatement mappedStatement = configuration.getMappedStatementMap().get(statementid);
 
-        List<Object> list = simpleExecutor.query(configuration, mappedStatement, params);
+        List<Object> list = executor.query(configuration, mappedStatement, params);
 
         return (List<E>) list;
     }

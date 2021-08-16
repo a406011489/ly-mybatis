@@ -1,7 +1,7 @@
 package com.ly.mybatis.builder;
 
-import com.ly.mybatis.config.Configuration;
-import com.ly.mybatis.mapped.MappedStatement;
+import com.ly.mybatis.session.Configuration;
+import com.ly.mybatis.mapping.MappedStatement;
 import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
@@ -9,6 +9,9 @@ import org.dom4j.io.SAXReader;
 import java.io.InputStream;
 import java.util.List;
 
+/**
+ * 主要负责解析 Mapper 映射配置文件。
+ */
 public class XMLMapperBuilder {
 
     private final Configuration configuration;
@@ -37,7 +40,6 @@ public class XMLMapperBuilder {
             mappedStatement.setSql(sqlText);
             String key = namespace+"."+id;
             configuration.getMappedStatementMap().put(key,mappedStatement);
-
         }
     }
 }

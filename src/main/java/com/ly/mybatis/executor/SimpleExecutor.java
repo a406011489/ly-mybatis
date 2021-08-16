@@ -1,11 +1,11 @@
 package com.ly.mybatis.executor;
 
-import com.ly.mybatis.builder.BoundSql;
-import com.ly.mybatis.config.Configuration;
-import com.ly.mybatis.mapped.MappedStatement;
-import com.ly.mybatis.utils.GenericTokenParser;
-import com.ly.mybatis.utils.ParameterMapping;
-import com.ly.mybatis.utils.ParameterMappingTokenHandler;
+import com.ly.mybatis.mapping.BoundSql;
+import com.ly.mybatis.session.Configuration;
+import com.ly.mybatis.mapping.MappedStatement;
+import com.ly.mybatis.parsing.GenericTokenParser;
+import com.ly.mybatis.mapping.ParameterMapping;
+import com.ly.mybatis.builder.ParameterMappingTokenHandler;
 
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
@@ -18,47 +18,57 @@ public class SimpleExecutor implements Executor {
 
     @Override
     public <E> List<E> query(Configuration configuration, MappedStatement mappedStatement, Object... params) throws Exception {
-        // 1. 注册驱动，获取连接
+
+        // 1. 拿到当前连接
         Connection connection = configuration.getDataSource().getConnection();
 
         // 2.拿到sql，并且进行处理，处理过后的BoundSql中就包含解析过后的sql(一系列问号)和问号所对应的参数。
         String sql = mappedStatement.getSql();
-        BoundSql boundSql = getBoundSql(sql);
+        BoundSql boundSql = this.getBoundSql(sql);
 
-        // 3.获取预处理对象：preparedStatement，相当于JDBC参数
+        // 3.获取预处理对象：preparedStatement，相当于JDBC参数，此时将带有问号的参数传给JDBC的PreparedStatement
         PreparedStatement preparedStatement = connection.prepareStatement(boundSql.getSqlText());
 
-        // 4. 设置参数
-        //获取到了参数的全路径
+        // 4.设置参数 获取到了参数的全路径
         String paramterType = mappedStatement.getParamterType();
 
-        Class<?> paramtertypeClass = getClassType(paramterType);
+        // 5.将它变成一个类
+        Class<?> paramtertypeClass = this.getClassType(paramterType);
 
+        // 6.取出参数集合
         List<ParameterMapping> parameterMappingList = boundSql.getParameterMappingList();
-        for (int i = 0; i < parameterMappingList.size(); i++) {
-            ParameterMapping parameterMapping = parameterMappingList.get(i);
-            String content = parameterMapping.getContent();
 
-            //反射
+        // 7.将参数集合一个一个封装进类
+        for (int i = 0; i < parameterMappingList.size(); i++) {
+
+            ParameterMapping p = parameterMappingList.get(i);
+
+            String content = p.getContent();
+
+            // 反射
             Field declaredField = paramtertypeClass.getDeclaredField(content);
-            //暴力访问
+
+            // 暴力访问
             declaredField.setAccessible(true);
+
             Object o = declaredField.get(params[0]);
 
             preparedStatement.setObject(i + 1, o);
-
         }
 
-
-        // 5. 执行sql
+        // 8.JDBC执行sql
         ResultSet resultSet = preparedStatement.executeQuery();
+
+        // 9.同样拿到返回的类，并弄成一个类
         String resultType = mappedStatement.getResultType();
         Class<?> resultTypeClass = getClassType(resultType);
 
         ArrayList<Object> objects = new ArrayList<>();
 
-        // 6. 封装返回结果集
+        // 10.封装返回结果集
         while (resultSet.next()) {
+
+            // 实例化成一个对象
             Object o = resultTypeClass.newInstance();
 
             /*
@@ -91,22 +101,12 @@ public class SimpleExecutor implements Executor {
                 writeMethod.invoke(o, value);
             }
             objects.add(o);
-
         }
         return (List<E>) objects;
-
-    }
-
-    @Override
-    public void close() throws SQLException {
-
     }
 
     private Class<?> getClassType(String paramterType) throws ClassNotFoundException {
-        if (paramterType != null) {
-            return Class.forName(paramterType);
-        }
-        return null;
+        return paramterType == null ? null : Class.forName(paramterType);
     }
 
 
@@ -118,16 +118,15 @@ public class SimpleExecutor implements Executor {
      */
     private BoundSql getBoundSql(String sql) {
         // 标记处理类：配置标记解析器来完成对占位符的解析处理工作
-        ParameterMappingTokenHandler parameterMappingTokenHandler = new ParameterMappingTokenHandler();
+        ParameterMappingTokenHandler p = new ParameterMappingTokenHandler();
 
-        GenericTokenParser genericTokenParser = new GenericTokenParser("#{", "}", parameterMappingTokenHandler);
-        //解析出来的sql
-        String parseSql = genericTokenParser.parse(sql);
-        //#{}里面解析出来的参数名称
-        List<ParameterMapping> parameterMappings = parameterMappingTokenHandler.getParameterMappings();
+        GenericTokenParser g = new GenericTokenParser("#{", "}", p);
+        // 解析出来的sql
+        String parseSql = g.parse(sql);
+
+        // #{}里面解析出来的参数名称
+        List<ParameterMapping> parameterMappings = p.getParameterMappings();
 
         return new BoundSql(parseSql, parameterMappings);
-
     }
-
 }

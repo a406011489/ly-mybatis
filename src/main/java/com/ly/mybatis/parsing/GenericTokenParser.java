@@ -13,10 +13,10 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package com.ly.mybatis.utils;
+package com.ly.mybatis.parsing;
 
 /**
- * @author Clinton Begin
+ * 通用的 Token 解析器
  */
 public class GenericTokenParser {
 
@@ -79,7 +79,6 @@ public class GenericTokenParser {
             end = text.indexOf(closeToken, offset);
           } else {//不存在转义字符，即需要作为参数进行处理
             expression.append(src, offset, end - offset);
-            offset = end + closeToken.length();
             break;
           }
         }

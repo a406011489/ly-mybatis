@@ -1,7 +1,7 @@
 package com.ly.mybatis.builder;
 
-import com.ly.mybatis.config.Configuration;
-import com.ly.mybatis.config.Resources;
+import com.ly.mybatis.session.Configuration;
+import com.ly.mybatis.io.Resources;
 import com.zaxxer.hikari.HikariDataSource;
 import org.dom4j.Document;
 import org.dom4j.Element;
@@ -11,11 +11,14 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Properties;
 
+/**
+ * 该类主要负责解析mybatis-config.xml配置文件。
+ */
 public class XMLConfigBuilder {
 
     private final Configuration configuration;
 
-    public XMLConfigBuilder(Configuration configuration) {
+    public XMLConfigBuilder() {
         this.configuration = new Configuration();
     }
 

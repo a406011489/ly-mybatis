@@ -1,28 +1,36 @@
 package com.ly.mybatis;
 
-import com.ly.mybatis.builder.SqlSession;
-import com.ly.mybatis.builder.SqlSessionFactory;
-import com.ly.mybatis.builder.SqlSessionFactoryBuilder;
-import com.ly.mybatis.config.Resources;
+import com.ly.mybatis.session.SqlSession;
+import com.ly.mybatis.session.SqlSessionFactory;
+import com.ly.mybatis.session.SqlSessionFactoryBuilder;
+import com.ly.mybatis.io.Resources;
 import com.ly.mybatis.entity.User;
 import com.ly.mybatis.mapper.UserMapper;
 
 import java.io.InputStream;
 import java.util.List;
 
+/**
+ * 使用端
+ */
 public class Main {
 
     public static void main(String[] args) throws Exception {
-        InputStream resourceAsSteam = Resources.getResourceAsSteam("config.xml");
-        SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(resourceAsSteam);
+
+        // 使用mybatis的第一步，读取配置文件，该配置文件主要是数据库连接等信息，把配置文件读取成一个流
+        InputStream stream = Resources.getResourceAsSteam("config.xml");
+
+        // 创建出工厂后，直接就可以拿到sqlSession对象了
+        SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(stream);
+
         SqlSession sqlSession = sqlSessionFactory.openSession();
 
-        //调用
-       User user = new User();
+        User user = new User();
         user.setId("11");
         user.setAge(11);
 
-         User user2 = sqlSession.selectOne("User.selectOne", user);
+        // 通过普通的调用
+        User user2 = sqlSession.selectOne("User.selectOne", user);
 
         System.out.println(user2);
 
@@ -31,8 +39,7 @@ public class Main {
             System.out.println(user1);
         }
 
-
-        //代理对象
+        // 通过代理对象调用
         UserMapper userMapper = sqlSession.getMapper(UserMapper.class);
         User userl = userMapper.selectOne(user);
         System.out.println(userl);
